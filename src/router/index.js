@@ -6,15 +6,38 @@ Vue.use(Router)
 
 const router = new Router({
   mode: 'history',
+  linkExactActiveClass: 'active',
   routes
 })
 
 router.beforeEach((to, from, next) => {
-  const auth = router.app.$options.store.state.auth
-  if (auth && to.path.indexOf('/auth/') !== -1) {
+  const app = router.app
+  const store = app.$options.store
+  const auth = store.state.auth
+  const articleId = to.params.articleId
+
+  app.$message.hide()
+
+  if ((auth && to.path.indexOf('/auth/') !== -1) ||
+  (!auth && to.meta.auth) ||
+  (articleId && !store.getters.getArticleById(articleId))) {
     next('/')
   } else {
     next()
+  }
+})
+
+// 注册全局后置钩子
+router.afterEach((to, from) => {
+  const app = router.app
+  const showMsg = to.params.showMsg
+
+  if (showMsg) {
+    if (typeof showMsg === 'string') {
+      app.$message.show(showMsg)
+    } else {
+      app.$message.show('操作成功')
+    }
   }
 })
 
